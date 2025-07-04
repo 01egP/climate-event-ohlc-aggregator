@@ -18,6 +18,7 @@
   "author": "01egP",
   "license": "MIT",
   "dependencies": {
+    "node-fetch": "^2.7.0",
     "ws": "^8.18.3"
   },
   "devDependencies": {
