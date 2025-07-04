@@ -1,0 +1,30 @@
+{
+  "name": "climate-event-ohlc-aggregator",
+  "version": "1.0.0",
+  "description": "Real-time service that connects to a climate WebSocket stream, aggregates data into OHLC format, and serves it via a local API.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "keywords": [
+    "weather",
+    "ohlc",
+    "aggregation",
+    "websocket",
+    "express",
+    "realtime"
+  ],
+  "author": "01egP",
+  "license": "MIT",
+  "dependencies": {
+    "node-fetch": "^2.7.0",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  },
+  "engines": {
+    "node": ">=20.17.0"
+  }
+}
