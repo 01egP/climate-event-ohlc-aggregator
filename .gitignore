@@ -10,3 +10,6 @@ dist/
 .DS_Store
 .vscode/
 .idea/
+
+# Ignore generated OHLC data
+/data/ohlc.json

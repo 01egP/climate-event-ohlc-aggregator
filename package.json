@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "simulate": "node scripts/weather-simulator.js",
-    "dev": "nodemon src/index.js",
+    "dev": "nodemon --watch src --ignore data src/index.js",
     "format": "prettier --write .",
     "lint": "eslint ."
   },
