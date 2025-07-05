@@ -5,9 +5,7 @@ const { processWeatherEvent, getOHLCData } = require('./ohlcAggregator');
 const app = express();
 const PORT = 3000;
 
-/**
- * Handles each incoming weather event and updates OHLC data.
- */
+//Handles each incoming weather event and updates OHLC data.
 function handleIncomingEvent(event) {
   processWeatherEvent(event);
 

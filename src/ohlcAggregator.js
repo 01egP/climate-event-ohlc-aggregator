@@ -1,3 +1,6 @@
+const { loadOHLCFromFile, saveOHLCToFile } = require('../utils/fileStorage');
+const ohlcData = loadOHLCFromFile();
+
 // Floors ISO timestamp to the nearest hour
 function getHourTimestamp(isoTimestamp) {
   const date = new Date(isoTimestamp);
@@ -5,11 +8,7 @@ function getHourTimestamp(isoTimestamp) {
   return date.toISOString();
 }
 
-const ohlcData = {};
-
-/**
- * Updates in-memory OHLC data with a new event.
- */
+// Handles incoming weather event and updates OHLC data
 function processWeatherEvent({ city, timestamp, temperature }) {
   const hour = getHourTimestamp(timestamp);
 
@@ -32,6 +31,8 @@ function processWeatherEvent({ city, timestamp, temperature }) {
     candle.low = Math.min(candle.low, temperature);
     candle.close = temperature;
   }
+
+  saveOHLCToFile(ohlcData);
 }
 
 function getOHLCData() {
