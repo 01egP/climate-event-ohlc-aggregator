@@ -3,7 +3,8 @@ const WebSocket = require('ws');
 const WS_URL = 'ws://localhost:8765';
 
 /**
- * Connects to the WebSocket server and handles incoming climate events.
+ * Connects to the WebSocket server and listens for events.
+ * @param {(event: { city: string, timestamp: string, temperature: number }) => void} onEvent
  */
 function startWebSocketClient(onEvent) {
   const ws = new WebSocket(WS_URL);
@@ -15,8 +16,6 @@ function startWebSocketClient(onEvent) {
   ws.on('message', (data) => {
     try {
       const event = JSON.parse(data);
-      console.log(`[${event.timestamp}] ${event.city}: ${event.temperature}°C`);
-
       if (onEvent) {
         onEvent(event);
       }
