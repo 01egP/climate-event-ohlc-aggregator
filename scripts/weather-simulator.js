@@ -23,26 +23,42 @@ wss.on('connection', (ws) => {
     const city = cityNames[Math.floor(Math.random() * cityNames.length)];
     const [lat, lon] = cities[city];
 
+    let weather;
+
     try {
       const response = await fetch(
         `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`
       );
       const data = await response.json();
-      const weather = data.current_weather;
+      weather = data.current_weather;
 
-      if (weather) {
-        const event = {
-          city,
-          timestamp: weather.time,
-          temperature: weather.temperature,
-          windspeed: weather.windspeed,
-          winddirection: weather.winddirection
-        };
-        ws.send(JSON.stringify(event));
+      // Fallback to mock data if API response is empty or invalid
+      if (!weather || !weather.time) {
+        throw new Error('Empty or invalid weather data');
       }
     } catch (err) {
-      console.error('Error fetching weather data:', err.message);
+      console.warn(
+        '⚠️ Using mock weather data due to error or limit:',
+        err.message
+      );
+      weather = {
+        time: new Date().toISOString(),
+        temperature: 20 + Math.random() * 10,
+        windspeed: 5 + Math.random() * 3,
+        winddirection: 90 + Math.random() * 45
+      };
     }
+
+    const event = {
+      city,
+      timestamp: weather.time,
+      temperature: weather.temperature,
+      windspeed: weather.windspeed,
+      winddirection: weather.winddirection
+    };
+
+    console.log('📤 Sending event:', event);
+    ws.send(JSON.stringify(event));
   }, INTERVAL_MS);
 
   ws.on('close', () => {
