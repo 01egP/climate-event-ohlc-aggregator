@@ -1,51 +1,19 @@
 import React, { useEffect, useState } from 'react';
+import { generateMockOHLCData } from './utils/mock';
 import Plot from 'react-plotly.js';
 
 function App() {
   const [city, setCity] = useState('Berlin');
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
-
-  const fakeData = {
-    '2025-07-05T12:00:00.000Z': {
-      open: 20.5,
-      high: 23.1,
-      low: 19.8,
-      close: 22.0
-    },
-    '2025-07-05T13:00:00.000Z': {
-      open: 22.0,
-      high: 24.3,
-      low: 21.4,
-      close: 23.8
-    },
-    '2025-07-05T14:00:00.000Z': {
-      open: 23.8,
-      high: 26.2,
-      low: 23.1,
-      close: 25.0
-    },
-    '2025-07-05T15:00:00.000Z': {
-      open: 25.0,
-      high: 27.5,
-      low: 24.2,
-      close: 26.4
-    },
-    '2025-07-05T16:00:00.000Z': {
-      open: 26.4,
-      high: 28.7,
-      low: 25.5,
-      close: 27.2
-    }
-  };
+  const [useMock, setUseMock] = useState(false);
 
   const fetchOHLC = async (selectedCity) => {
     try {
       const res = await fetch(`/ohlc/${selectedCity}`);
       if (!res.ok) throw new Error(`City "${selectedCity}" not found`);
       const json = await res.json();
-      // setData(json);
-      setData(fakeData);
+      setData(json);
       setError('');
     } catch (err) {
       setData(null);
@@ -54,8 +22,13 @@ function App() {
   };
 
   useEffect(() => {
-    fetchOHLC(city);
-  }, [city]);
+    if (useMock) {
+      setData(generateMockOHLCData());
+      setError('');
+    } else {
+      fetchOHLC(city);
+    }
+  }, [city, useMock]);
 
   const handleChange = (e) => setCity(e.target.value);
 
@@ -75,7 +48,7 @@ function App() {
       <div style={{ marginBottom: '1rem', textAlign: 'center' }}>
         <label>
           Select city:{' '}
-          <select value={city} onChange={handleChange}>
+          <select value={city} onChange={handleChange} disabled={useMock}>
             <option value="Berlin">Berlin</option>
             <option value="NewYork">NewYork</option>
             <option value="CapeTown">CapeTown</option>
@@ -83,6 +56,14 @@ function App() {
             <option value="Tokyo">Tokyo</option>
           </select>
         </label>
+        <div style={{ marginTop: '0.5rem' }}>
+          <button onClick={() => setUseMock(false)} disabled={!useMock}>
+            🔄 Back to Live
+          </button>{' '}
+          <button onClick={() => setUseMock(true)} disabled={useMock}>
+            🧪 Use Mock OHLC
+          </button>
+        </div>
       </div>
 
       {error && <p style={{ color: 'red', textAlign: 'center' }}>❌ {error}</p>}
@@ -103,8 +84,8 @@ function App() {
                     close,
                     type: 'candlestick',
                     increasing: { line: { color: 'green' } },
-                    decreasing: { line: { color: 'red' } }
-                  }
+                    decreasing: { line: { color: 'red' } },
+                  },
                 ]}
                 layout={{
                   width: '100%',
@@ -114,9 +95,9 @@ function App() {
                   xaxis: {
                     title: 'Time',
                     rangeslider: { visible: false },
-                    type: 'date'
+                    type: 'date',
                   },
-                  yaxis: { title: '°C', fixedrange: true }
+                  yaxis: { title: '°C', fixedrange: true },
                 }}
                 useResizeHandler
                 style={{ width: '100%' }}
@@ -124,9 +105,7 @@ function App() {
             </div>
 
             <div style={{ flex: 1 }}>
-              <h3 style={{ marginBottom: '0.5rem', textAlign: 'center' }}>
-                Raw OHLC Data
-              </h3>
+              <h3 style={{ marginBottom: '0.5rem', textAlign: 'center' }}>Raw OHLC Data</h3>
               <table border="1" cellPadding="8" style={{ margin: '0 auto' }}>
                 <thead>
                   <tr>
