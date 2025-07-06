@@ -1,9 +1,10 @@
 const eslintPluginPrettier = require('eslint-plugin-prettier');
 const eslintConfigPrettier = require('eslint-config-prettier');
 
+/** @type {import("eslint").Linter.FlatConfig[]} */
 module.exports = [
   {
-    files: ['src/**/*.js'],
+    files: ['src/**/*.js', 'utils/**/*.js', 'scripts/**/*.js'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'script',
@@ -11,7 +12,10 @@ module.exports = [
         console: 'readonly',
         module: 'readonly',
         require: 'readonly',
-        __dirname: 'readonly'
+        __dirname: 'readonly',
+        process: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly'
       }
     },
     plugins: {
