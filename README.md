@@ -13,6 +13,10 @@ This repository contains a real-time system that connects to a climate WebSocket
 - REST API to access:
   - All OHLC data: `GET /ohlc`
   - City-specific data: `GET /ohlc/:city`
+- Middleware:
+  - Request rate limiting with `express-rate-limit`
+  - Request timeout using `connect-timeout`
+  - Logging HTTP requests via `morgan`
 - Optional event simulator for testing
 - Authentication & Authorization points shown in code comments
 
@@ -56,9 +60,10 @@ climate-event-ohlc-aggregator/
 Create a `.env` file in the `backend/` directory with the following variables:
 
 ```env
-DATA_MODE=real     # use to real weather API (requires API_KEY)
-# DATA_MODE=mock       # switch mock data (no API key needed)
-API_KEY=your_api_key  # Required if using the real weather API (e.g., WeatherAPI.com)
+NODE_ENV=development     # use 'production' for live deployment
+DATA_MODE=real           # use real weather API (requires API_KEY)
+# DATA_MODE=mock         # use mock data (no API key needed)
+API_KEY=your_api_key     # Required if using the real weather API (e.g., WeatherAPI.com)
 ```
 
 > 📝 **Note:** Due to frequent downtime from the Open-Meteo API, the app was updated to use an alternative provider. Make sure to provide a valid API key to access real-time weather data.
@@ -98,7 +103,7 @@ npm start
 
 - WebSocket stream processed at 10–20 events/sec
 - OHLC data aggregates correctly
-- City toggle and mock mode behave as expected
+- City selection and mock mode behave as expected
 - Candlestick and table render correctly for all cities
 - File-based persistence works across restarts
 
@@ -108,7 +113,7 @@ npm start
 
 - `Authorization` headers shown in comments
 - Role-based access (admin / city-specific) explained
-- No implementation for brevity, but extendable
+- No implementation for brevity, but extendable to support secure access via JWT, scopes, and RBAC
 
 ---
 
@@ -124,6 +129,17 @@ npm start
 
 - All data is stored in `/backend/data/ohlc.json` (excluded via `.gitignore`)
 - Backend and frontend code format enforced with Prettier
+
+---
+
+## ⚖️ Trade-offs & Scaling Ideas (for Discussion)
+
+- Aggregation is performed in-memory per city per hour for speed and simplicity.
+- In a production environment, consider:
+  - Moving state to Redis or a persistent DB
+  - Using queues (Kafka, SQS) to buffer WebSocket events
+  - Sharding cities across workers for scalability
+  - Eviction strategies to avoid unbounded memory growth
 
 ---
 
