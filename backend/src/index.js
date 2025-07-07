@@ -1,11 +1,50 @@
 const express = require('express');
+const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
+const timeout = require('connect-timeout');
 const { startWebSocketClient } = require('./ws-client');
 const { processWeatherEvent, getOHLCData } = require('./ohlcAggregator');
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 const app = express();
 const PORT = 3000;
 
-//Handles each incoming weather event and updates OHLC data.
+/** Middleware **/
+
+// Logs all HTTP requests in common Apache format
+app.use(morgan('combined'));
+
+// Apply rate limiting only in production
+if (process.env.NODE_ENV === 'production') {
+  const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: 'Too many requests. Please try again later.',
+    skip: (req) => req.ip === '::1' || req.ip === '127.0.0.1' // exclude localhost
+  });
+
+  app.use('/ohlc', limiter); // applies also to /ohlc/:city
+}
+
+// Define test route BEFORE global timeout middleware
+app.get('/test-timeout', timeout('5s'), async (req, res) => {
+  if (req.timedout) return;
+
+  // Simulate long processing
+  await new Promise((resolve) => setTimeout(resolve, 6000));
+
+  if (!req.timedout) {
+    res.json({ message: 'still alive' });
+  }
+});
+
+// Apply global timeout to all routes after this point
+app.use(timeout('10s'));
+
+/** WebSocket Event Handler **/
+
 function handleIncomingEvent(event) {
   processWeatherEvent(event);
 
@@ -21,6 +60,8 @@ function handleIncomingEvent(event) {
     }
   }
 }
+
+/** Routes **/
 
 /**
  * GET /ohlc
@@ -76,9 +117,59 @@ app.get('/ohlc/:city', (req, res) => {
   res.json(data[city]);
 });
 
-app.listen(PORT, () => {
-  console.log(`📡 OHLC API available at http://localhost:${PORT}`);
+/** Timeout-aware middleware **/
+app.use((req, res, next) => {
+  if (req.timedout) {
+    console.warn(`[WARN] Timeout on: ${req.originalUrl}`);
+    if (!res.headersSent) {
+      res.status(503).json({ error: 'Request timed out' });
+    }
+  } else {
+    next();
+  }
 });
 
-// Start receiving WebSocket events
+/** Error handling middleware **/
+app.use((err, req, res, next) => {
+  console.error('[ERROR]', err);
+
+  if (req.timedout) {
+    console.warn(`[WARN] Timeout on: ${req.originalUrl}`);
+
+    // If the request has timed out, we should not send a response
+    // because the client has already stopped waiting.
+    // However, we can log the error.
+    if (!res.headersSent) {
+      res.status(503).json({ error: 'Request timed out' });
+    }
+
+    return;
+  }
+
+  if (!res.headersSent) {
+    res.status(500).json({ error: 'Internal server error' });
+  } else {
+    next(err);
+  }
+});
+
+/** Graceful error handling **/
+
+process.on('uncaughtException', (err) => {
+  console.error('[FATAL] Uncaught Exception:', err);
+  process.exit(1); // Exit the process to avoid inconsistent state
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[FATAL] Unhandled Rejection:', reason);
+  process.exit(1); // Exit to prevent silent failures
+});
+
+/** Start server **/
+
+app.listen(PORT, () => {
+  console.log(`📡 OHLC API is available at http://localhost:${PORT}`);
+});
+
+// Start WebSocket stream processing
 startWebSocketClient(handleIncomingEvent);
