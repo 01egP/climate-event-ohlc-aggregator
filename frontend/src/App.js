@@ -10,6 +10,15 @@ function App() {
 
   const fetchOHLC = async (selectedCity) => {
     try {
+      /**
+       * This is where the client would send the Authorization header with the access token
+       * Example:
+       * const res = await fetch(`/ohlc/${selectedCity}`, {
+       *   headers: {
+       *     Authorization: `Bearer ${token}` // ← if auth is required in the future
+       *   }
+       * });
+       */
       const res = await fetch(`/ohlc/${selectedCity}`);
       if (!res.ok) throw new Error(`City "${selectedCity}" not found`);
       const json = await res.json();
