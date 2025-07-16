@@ -9,10 +9,10 @@
     "skipLibCheck": true,
     "moduleResolution": "node",
     "outDir": "dist",
-    "rootDir": "src",
+    "rootDir": ".",
     "resolveJsonModule": true,
     "types": ["node"]
   },
-  "include": ["src"],
+  "include": ["src", "utils"],
   "exclude": ["node_modules", "dist"]
 }
