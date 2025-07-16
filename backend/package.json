@@ -4,9 +4,10 @@
   "description": "Real-time service that connects to a climate WebSocket stream, aggregates data into OHLC format, and serves it via a local API.",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "dev": "nodemon",
     "simulate": "node scripts/weather-simulator.js",
-    "dev": "nodemon --watch src --ignore data src/index.js",
     "format": "prettier --write .",
     "lint": "eslint src scripts utils"
   },
@@ -30,11 +31,16 @@
     "ws": "^8.18.3"
   },
   "devDependencies": {
+    "@types/connect-timeout": "^1.9.0",
+    "@types/express": "^5.0.3",
+    "@types/morgan": "^1.9.10",
+    "@types/node": "^24.0.14",
     "eslint": "^9.30.1",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-prettier": "^5.5.1",
     "nodemon": "^3.1.10",
-    "prettier": "^3.6.2"
+    "prettier": "^3.6.2",
+    "typescript": "^5.8.3"
   },
   "engines": {
     "node": ">=20.17.0"
