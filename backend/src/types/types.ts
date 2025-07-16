@@ -1,3 +1,9 @@
+import { Request } from 'express';
+
+export interface TimeoutRequest extends Request {
+  timedout: boolean;
+}
+
 export interface Candle {
   open: number;
   high: number;
