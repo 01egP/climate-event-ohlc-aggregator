@@ -36,6 +36,10 @@
   "proxy": "http://localhost:3000",
   "devDependencies": {
     "@babel/core": "^7.28.0",
+    "@types/plotly.js": "^3.0.2",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@types/react-plotly.js": "^2.6.3",
     "prettier": "^3.6.2"
   }
 }

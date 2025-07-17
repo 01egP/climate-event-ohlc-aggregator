@@ -1,5 +1,14 @@
-export function generateMockOHLCData() {
-  const ohlc = {};
+interface Candle {
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+}
+
+type OHLCData = Record<string, Candle>;
+
+export function generateMockOHLCData(): OHLCData {
+  const ohlc: OHLCData = {};
   const now = new Date();
   const startHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours() - 24);
 
@@ -14,5 +23,6 @@ export function generateMockOHLCData() {
 
     ohlc[key] = { open, high, low, close };
   }
+
   return ohlc;
 }
