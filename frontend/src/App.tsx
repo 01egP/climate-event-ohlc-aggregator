@@ -1,6 +1,7 @@
 import React, { useEffect, useState, ChangeEvent } from 'react';
-import { generateMockOHLCData } from './utils/mock';
 import Plot from 'react-plotly.js';
+import { Layout, Data } from 'plotly.js';
+import { generateMockOHLCData } from './utils/mock';
 
 interface Candle {
   open: number;
@@ -10,15 +11,14 @@ interface Candle {
 }
 
 type OHLCData = Record<string, Candle>;
-type City = 'Berlin' | 'NewYork' | 'CapeTown' | 'SaoPaulo' | 'Tokyo';
 
 function App() {
-  const [city, setCity] = useState<City>('Berlin');
+  const [city, setCity] = useState('Berlin');
   const [data, setData] = useState<OHLCData | null>(null);
-  const [error, setError] = useState<string>('');
-  const [useMock, setUseMock] = useState<boolean>(false);
+  const [error, setError] = useState('');
+  const [useMock, setUseMock] = useState(false);
 
-  const fetchOHLC = async (selectedCity: City) => {
+  const fetchOHLC = async (selectedCity: string) => {
     try {
       const res = await fetch(`/ohlc/${selectedCity}`);
       if (!res.ok) throw new Error(`City "${selectedCity}" not found`);
@@ -40,7 +40,9 @@ function App() {
     }
   }, [city, useMock]);
 
-  const handleChange = (e: ChangeEvent<HTMLSelectElement>) => setCity(e.target.value as City);
+  const handleChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    setCity(e.target.value);
+  };
 
   const ohlcEntries = data
     ? Object.entries(data).sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime())
@@ -51,6 +53,35 @@ function App() {
   const high = ohlcEntries.map(([, v]) => v.high);
   const low = ohlcEntries.map(([, v]) => v.low);
   const close = ohlcEntries.map(([, v]) => v.close);
+
+  const plotData: Data[] = [
+    {
+      x: times,
+      open,
+      high,
+      low,
+      close,
+      type: 'candlestick',
+      increasing: { line: { color: 'green' } },
+      decreasing: { line: { color: 'red' } },
+    },
+  ];
+
+  const layout: Partial<Layout> = {
+    width: 800,
+    height: 400,
+    showlegend: false,
+    margin: { t: 30, r: 10, b: 40, l: 50 },
+    xaxis: {
+      title: { text: 'Time' },
+      rangeslider: { visible: false },
+      type: 'date',
+    },
+    yaxis: { 
+      title: { text: '°C' }, 
+      fixedrange: true 
+    },
+  };
 
   return (
     <div style={{ padding: '2rem', fontFamily: 'Arial' }}>
@@ -77,7 +108,7 @@ function App() {
         </div>
       </div>
 
-      {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
+      {error && <p style={{ color: 'red', textAlign: 'center' }}>❌ {error}</p>}
 
       {data && (
         <>
@@ -86,30 +117,8 @@ function App() {
           <div style={{ display: 'flex', gap: '2rem' }}>
             <div style={{ flex: 1 }}>
               <Plot
-                data={[
-                  {
-                    x: times,
-                    open,
-                    high,
-                    low,
-                    close,
-                    type: 'candlestick',
-                    increasing: { line: { color: 'green' } },
-                    decreasing: { line: { color: 'red' } },
-                  },
-                ]}
-                layout={{
-                  width: 800,
-                  height: 400,
-                  showlegend: false,
-                  margin: { t: 30, r: 10, b: 40, l: 50 },
-                  xaxis: {
-                    title: 'Time',
-                    rangeslider: { visible: false },
-                    type: 'date',
-                  },
-                  yaxis: { title: '°C', fixedrange: true },
-                }}
+                data={plotData}
+                layout={layout}
                 useResizeHandler
                 style={{ width: '100%' }}
               />
