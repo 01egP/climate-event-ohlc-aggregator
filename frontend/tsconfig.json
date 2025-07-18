@@ -14,8 +14,12 @@
     "moduleResolution": "Node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "types": ["jest", "@testing-library/jest-dom"]
   },
-  "include": ["src"],
-  "exclude": ["src/**/*.test.js", "src/setupTests.js", "src/utils/mock.ts"]
+  "include": [
+    "src",
+    "src/**/*.test.tsx",
+    "src/setupTests.ts"
+  ]
 }
