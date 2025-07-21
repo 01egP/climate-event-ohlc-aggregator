@@ -8,7 +8,7 @@ export function handleIncomingEvent(event: WeatherEvent): void {
     const ohlc = getOHLCData();
     const city = event.city;
 
-    if (ohlc[city]) {
+    if (ohlc && ohlc[city]) {
       const candles = ohlc[city];
       const latestHour = Object.keys(candles).sort().pop();
 
