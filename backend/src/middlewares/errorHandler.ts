@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { TimeoutRequest } from '../types/types';
 
 export const errorHandler = (

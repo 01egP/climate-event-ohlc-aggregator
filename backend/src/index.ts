@@ -1,4 +1,4 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response } from 'express';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import timeout from 'connect-timeout';
@@ -31,15 +31,19 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 /** Test-only endpoint for timeout simulation **/
-app.get('/test-timeout', timeout('5s'), async (req: TimeoutRequest, res: Response) => {
-  if (req.timedout) return;
+app.get(
+  '/test-timeout',
+  timeout('5s'),
+  async (req: TimeoutRequest, res: Response) => {
+    if (req.timedout) return;
 
-  await new Promise((resolve) => setTimeout(resolve, 6000));
+    await new Promise((resolve) => setTimeout(resolve, 6000));
 
-  if (!req.timedout) {
-    res.json({ message: 'still alive' });
+    if (!req.timedout) {
+      res.json({ message: 'still alive' });
+    }
   }
-});
+);
 
 /** Routes **/
 app.use('/ohlc', ohlcRoutes);

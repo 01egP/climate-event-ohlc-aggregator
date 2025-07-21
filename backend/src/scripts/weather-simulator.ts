@@ -16,7 +16,7 @@ const cities: Record<string, string> = {
   NewYork: 'New York',
   Tokyo: 'Tokyo',
   SaoPaulo: 'Sao Paulo',
-  CapeTown: 'Cape Town',
+  CapeTown: 'Cape Town'
 };
 
 const cityKeys = Object.keys(cities);
@@ -58,7 +58,7 @@ wss.on('connection', (ws: WebSocket) => {
     const event: WeatherEvent = {
       city: cityKey,
       timestamp: new Date().toISOString(),
-      temperature,
+      temperature
     };
 
     ws.send(JSON.stringify(event));
