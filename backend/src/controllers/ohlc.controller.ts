@@ -13,6 +13,6 @@ export const getCityOhlc = (req: Request, res: Response) => {
   if (!data[city]) {
     return res.status(404).json({ error: `No data for city "${city}"` });
   }
-
+  console.log(`[API] Returning OHLC for city: ${city}`);
   res.json(data[city]);
 };
