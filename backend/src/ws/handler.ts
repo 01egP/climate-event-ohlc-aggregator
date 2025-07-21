@@ -13,7 +13,7 @@ export function handleIncomingEvent(event: WeatherEvent): void {
       const latestHour = Object.keys(candles).sort().pop();
 
       if (latestHour) {
-        console.log(`[DEBUG] ${city} ${latestHour}:`, candles[latestHour]);
+        // console.log(`[DEBUG] ${city} ${latestHour}:`, candles[latestHour]);
       }
     }
   }

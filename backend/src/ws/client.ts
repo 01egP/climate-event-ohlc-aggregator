@@ -1,5 +1,5 @@
 import WebSocket from 'ws';
-import { WeatherEvent } from './types/types';
+import { WeatherEvent } from '../types/types';
 
 const WS_URL = 'ws://localhost:8765';
 
