@@ -14,7 +14,10 @@ export function loadOHLCFromFile(): OHLCData {
       const raw = fs.readFileSync(DATA_FILE, 'utf8');
       return JSON.parse(raw) as OHLCData;
     } catch (err) {
-      console.error('Failed to read OHLC data from file:', (err as Error).message);
+      console.error(
+        'Failed to read OHLC data from file:',
+        (err as Error).message
+      );
     }
   }
   return {};

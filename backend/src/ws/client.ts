@@ -1,5 +1,5 @@
 import WebSocket from 'ws';
-import { WeatherEvent } from './types/types';
+import { WeatherEvent } from '../types/types';
 
 const WS_URL = 'ws://localhost:8765';
 
@@ -7,7 +7,9 @@ const WS_URL = 'ws://localhost:8765';
  * Connects to the WebSocket server and listens for events.
  * @param onEvent Callback to handle incoming weather events.
  */
-export function startWebSocketClient(onEvent: (event: WeatherEvent) => void): void {
+export function startWebSocketClient(
+  onEvent: (event: WeatherEvent) => void
+): void {
   const ws = new WebSocket(WS_URL);
 
   ws.on('open', () => {

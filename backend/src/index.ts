@@ -1,16 +1,20 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response } from 'express';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import timeout from 'connect-timeout';
 import dotenv from 'dotenv';
-import { startWebSocketClient } from './ws-client';
-import { processWeatherEvent, getOHLCData } from './ohlcAggregator';
-import { WeatherEvent, OHLCData, TimeoutRequest } from './types/types';
+
+import ohlcRoutes from './routes/ohlc.routes';
+import { errorHandler } from './middlewares/errorHandler';
+import { timeoutHandler } from './middlewares/timeoutHandler';
+import { startWebSocketClient } from './ws/client';
+import { handleIncomingEvent } from './ws/handler';
+import { TimeoutRequest } from './types/types';
 
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 /** Middleware **/
 app.use(morgan('combined'));
@@ -26,123 +30,32 @@ if (process.env.NODE_ENV === 'production') {
   app.use('/ohlc', limiter);
 }
 
-app.get('/test-timeout', timeout('5s'), async (req: TimeoutRequest, res: Response) => {
-  if (req.timedout) return;
+/** Test-only endpoint for timeout simulation **/
+app.get(
+  '/test-timeout',
+  timeout('5s'),
+  async (req: TimeoutRequest, res: Response) => {
+    if (req.timedout) return;
 
-  await new Promise((resolve) => setTimeout(resolve, 6000));
+    await new Promise((resolve) => setTimeout(resolve, 6000));
 
-  if (!req.timedout) {
-    res.json({ message: 'still alive' });
-  }
-});
-
-app.use(timeout('10s'));
-
-/** WebSocket Event Handler **/
-
-function handleIncomingEvent(event: WeatherEvent) {
-  processWeatherEvent(event);
-
-  const ohlc = getOHLCData();
-  const city = event.city;
-
-  if (ohlc[city]) {
-    const candles = ohlc[city];
-    const latestHour = Object.keys(candles).sort().pop();
-
-    if (latestHour) {
-      // console.log(`${city} ${latestHour}:`, candles[latestHour]);
+    if (!req.timedout) {
+      res.json({ message: 'still alive' });
     }
   }
-}
+);
 
 /** Routes **/
+app.use('/ohlc', ohlcRoutes);
 
-/**
- * GET /ohlc
- * Returns all aggregated OHLC data
- *
- * Authentication:
- * Expect an Authorization header (e.g., Bearer token).
- * Example:
- *   const token = req.headers.authorization?.split(' ')[1];
- *
- * Authorization:
- * Decode the token and check admin-level access.
- * Example:
- *   const user = jwt.verify(token, secret);
- *   if (!user.roles.includes('admin')) {
- *     return res.status(403).json({ error: 'Forbidden' });
- *   }
- */
-app.get('/ohlc', (req: Request, res: Response) => {
-  const data: OHLCData = getOHLCData();
-  res.json(data);
-});
+/** Global timeout middleware (after routes) **/
+app.use(timeout('10s'));
 
-/**
- * GET /ohlc/:city
- * Returns OHLC data for a specific city
- *
- * Authentication:
- * Expect an Authorization header (e.g., Bearer token).
- * Example:
- *   const token = req.headers.authorization?.split(' ')[1];
- *
- * Authorization:
- * Decode the token to extract user identity and scopes.
- * Example:
- *   const user = jwt.verify(token, secret);
- *   const scopes = user?.scopes || [];
- *
- * Role-based Access Control:
- * Ensure the user is allowed to access this city's data.
- * Example:
- *   if (!scopes.includes('read:weather') || !user.allowedCities.includes(req.params.city)) {
- *     return res.status(403).json({ error: 'Forbidden' });
- *   }
- */
-app.get('/ohlc/:city', (req: Request, res: Response) => {
-  const city = req.params.city;
-  const data: OHLCData = getOHLCData();
+/** Timeout-aware handler **/
+app.use(timeoutHandler);
 
-  if (!data[city]) {
-    return res.status(404).json({ error: `No data found for city "${city}"` });
-  }
-
-  res.json(data[city]);
-});
-
-/** Timeout-aware middleware **/
-app.use((req: TimeoutRequest, res: Response, next: NextFunction) => {
-  if (req.timedout) {
-    console.warn(`[WARN] Timeout on: ${req.originalUrl}`);
-    if (!res.headersSent) {
-      res.status(503).json({ error: 'Request timed out' });
-    }
-  } else {
-    next();
-  }
-});
-
-/** Error handling middleware **/
-app.use((err: Error, req: TimeoutRequest, res: Response, next: NextFunction) => {
-  console.error('[ERROR]', err);
-
-  if (req.timedout) {
-    console.warn(`[WARN] Timeout on: ${req.originalUrl}`);
-    if (!res.headersSent) {
-      res.status(503).json({ error: 'Request timed out' });
-    }
-    return;
-  }
-
-  if (!res.headersSent) {
-    res.status(500).json({ error: 'Internal server error' });
-  } else {
-    next(err);
-  }
-});
+/** Global error handler **/
+app.use(errorHandler);
 
 /** Graceful error handling **/
 process.on('uncaughtException', (err) => {
@@ -155,9 +68,10 @@ process.on('unhandledRejection', (reason) => {
   process.exit(1);
 });
 
-/** Start server **/
+/** Start WebSocket listener **/
+startWebSocketClient(handleIncomingEvent);
+
+/** Start HTTP server **/
 app.listen(PORT, () => {
   console.log(`📡 OHLC API is available at http://localhost:${PORT}`);
 });
-
-startWebSocketClient(handleIncomingEvent);

@@ -1,5 +1,5 @@
 import { loadOHLCFromFile, saveOHLCToFile } from '../utils/fileStorage';
-import { WeatherEvent, OHLCData, Candle } from './types/types';
+import { WeatherEvent, OHLCData } from './types/types';
 
 // In-memory OHLC data store
 const ohlcData: OHLCData = loadOHLCFromFile();
@@ -16,7 +16,11 @@ function getHourTimestamp(isoTimestamp: string): string {
 /**
  * Processes an incoming weather event and updates the OHLC data.
  */
-export function processWeatherEvent({ city, timestamp, temperature }: WeatherEvent): void {
+export function processWeatherEvent({
+  city,
+  timestamp,
+  temperature
+}: WeatherEvent): void {
   const hour = getHourTimestamp(timestamp);
 
   if (!ohlcData[city]) {
@@ -30,7 +34,7 @@ export function processWeatherEvent({ city, timestamp, temperature }: WeatherEve
       open: temperature,
       high: temperature,
       low: temperature,
-      close: temperature,
+      close: temperature
     };
   } else {
     const candle = cityData[hour];
