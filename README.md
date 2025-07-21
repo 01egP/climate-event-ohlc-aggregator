@@ -7,18 +7,18 @@ This repository contains a real-time system that connects to a climate WebSocket
 ## ✨ Features
 
 ### Backend
-- Connects to a local or remote WebSocket server streaming temperature data
+- Connects to a WebSocket server streaming temperature data
 - Aggregates data per city in OHLC format per hour
 - Persists aggregated OHLC data to disk (`/data`)
-- REST API to access:
-  - All OHLC data: `GET /ohlc`
-  - City-specific data: `GET /ohlc/:city`
+- REST API:
+  - `GET /ohlc` - all cities
+  - `GET /ohlc/:city` - specific city
 - Middleware:
-  - Request rate limiting with `express-rate-limit`
-  - Request timeout using `connect-timeout`
-  - Logging HTTP requests via `morgan`
-- Optional event simulator for testing
-- Authentication & Authorization points shown in code comments
+  - Rate limiting (`express-rate-limit`)
+  - Timeout handling (`connect-timeout`)
+  - Logging (`morgan`)
+- Graceful error handling
+- Optional event simulator for development
 
 ### Frontend
 - React UI with Plotly.js candlestick chart
@@ -32,33 +32,51 @@ This repository contains a real-time system that connects to a climate WebSocket
 
 ```
 climate-event-ohlc-aggregator/
-├── backend/                # Node.js + Express backend
-│   ├── data/               # File-based OHLC storage (gitignored)    
-│   ├── src/    
-│   │   ├── scripts/        # Script to simulate weather events for development/testing
-│   │   │   └── weather-simulator.ts    
-│   │   ├── types/types.ts  # Shared domain models (WeatherEvent, OHLCData, etc.)
-│   │   ├── index.ts        # Main server entry point       
-│   │   ├── ws-client.ts    # WebSocket client for incoming weather data
-│   │   └── ohlcAggregator.ts # Aggregates weather data into OHLC format    
-│   ├── utils/fileStorage.ts  # Handles reading/writing OHLC data to disk              
-│   ├── package.json
-│   ├── tsconfig.json       # TypeScript config
-│   ├── .eslint.config.js   # ESLint config (Flat config)
-│   └── .prettierrc          
-├── frontend/               # React frontend with Plotly.js charts
-│   ├── public/
+├── backend/                     # Node.js + Express backend
+│   ├── data/                    # File-based OHLC storage
 │   ├── src/
-│   │   ├── App.tsx         # Main UI component 
-│   │   ├── index.tsx       # React entry point
-│   │   ├── App.test.tsx    # Unit + integration tests for main UI behavior 
-│   │   ├── react-app-env.d.ts # React global types 
-│   │   ├── setupTests.ts   # Test setup with Jest + react-testing-library 
-│   │   └── utils/mock.ts   # Generates mock OHLC data for demo mode
-│   ├── tsconfig.json       # TypeScript config
-│   ├── package.json
-│   └── .prettierrc          
+│   │   ├── controllers/         # Route controllers
+│   │   ├── e2e/                 # Supertest integration tests
+│   │   ├── middlewares/        # Error and timeout handlers
+│   │   ├── routes/             # Express route definitions
+│   │   ├── scripts/            # Event simulator
+│   │   ├── services/           # OHLC service logic
+│   │   ├── types/              # TypeScript type definitions
+│   │   ├── ws/                 # WebSocket client & handler
+│   │   ├── app.ts              # Express app instance
+│   │   └── index.ts            # Server bootstrap
+│   ├── utils/                  # File storage logic
+│   └── test configs            # Jest, TS config
+├── frontend/                   # React frontend
+│   ├── public/                 # Static assets
+│   ├── src/
+│   │   ├── utils/              # Mock data generator
+│   │   ├── types/              # Type declarations
+│   │   └── components & tests  # Main UI & tests
 └── README.md
+```
+
+---
+
+## 🧪 Test Coverage
+
+### Unit Tests
+- `src/services/ohlc.service.test.ts`
+- `src/controllers/ohlc.controller.test.ts`
+- `src/middlewares/errorHandler.test.ts`
+- `src/middlewares/timeoutHandler.test.ts`
+- `src/ws/handler.test.ts`
+- `src/ws/client.test.ts`
+
+### Integration Tests
+- `src/e2e/ohlc.e2e.test.ts` (REST API with Supertest)
+
+### Frontend Tests
+- `frontend/src/App.test.tsx` (React component behavior)
+
+Run all tests:
+```bash
+npm run test
 ```
 
 ---
@@ -129,7 +147,8 @@ npm start
 
 - **Backend:** Node.js, Express, TypeScript
 - **Frontend:** React, TypeScript, Plotly.js
-- **Other:** WebSocket, File persistence, Prettier, ESLint, Jest
+- **Testing:** Jest, Supertest, React Testing Library
+- **Other:** WebSockets, File storage, Prettier, ESLint
 
 ---
 
@@ -138,7 +157,7 @@ npm start
 - All data is stored in `/backend/data/ohlc.json` (excluded via `.gitignore`)
 - Backend and frontend use TypeScript in strict mode
 - Prettier is used for consistent code formatting
-- Unit tests are written with React Testing Library and Jest
+- Unit and integration tests are written using Jest, Supertest, and React Testing Library
 
 ---
 
@@ -151,8 +170,3 @@ npm start
   - Sharding cities across workers for scalability
   - Eviction strategies to avoid unbounded memory growth
 
----
-
-## ✅ Ready for Review
-
-All core functionality implemented. Ready for evaluation.
