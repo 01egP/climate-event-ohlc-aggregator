@@ -11,6 +11,8 @@ export const timeoutHandler = (
     if (!res.headersSent) {
       return res.status(503).json({ error: 'Request timed out' });
     }
+    return; // Don't call next
   }
+
   next();
 };
